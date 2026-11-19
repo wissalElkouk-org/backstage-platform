@@ -1,0 +1,58 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: portfolio-evolve-template
+  title: Faire évoluer le Portfolio (v2)
+  description: Ajoute Certifications, Projets DevOps & Cloud, Dark Mode et met à jour les infos.
+  tags: [nextjs, evolution]
+spec:
+  owner: user:guest
+  type: service
+
+  parameters:
+    - title: Dépôt et informations
+      required: [repoUrl, fullName, jobTitle, email]
+      properties:
+        repoUrl:
+          title: Dépôt du portfolio
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts: [github.com]
+        fullName:
+          title: Nom complet
+          type: string
+        jobTitle:
+          title: Titre
+          type: string
+        email:
+          title: Email
+          type: string
+
+  steps:
+    - id: fetch
+      name: Préparer les modifications
+      action: fetch:template
+      input:
+        url: ./content
+        targetPath: ./changes
+        values:
+          fullName: ${{ parameters.fullName }}
+          jobTitle: ${{ parameters.jobTitle }}
+          email: ${{ parameters.email }}
+
+    - id: pr
+      name: Ouvrir la Pull Request
+      action: publish:github:pull-request
+      input:
+        repoUrl: ${{ parameters.repoUrl }}
+        branchName: feature/v2-evolution
+        title: "feat: Certifications, Projets DevOps & Cloud, Dark Mode"
+        description: Évolution générée par Backstage.
+        sourcePath: ./changes
+        targetBranchName: main
+
+  output:
+    links:
+      - title: Pull Request
+        url: ${{ steps['pr'].output.remoteUrl }}

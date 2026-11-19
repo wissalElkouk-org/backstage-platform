@@ -1,0 +1,100 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: portfolio-nextjs-template
+  title: Portfolio Next.js (CI/CD complet)
+  description: Crée un portfolio Next.js, son dépôt GitHub, ses artefacts Docker et son pipeline.
+  tags: [nextjs, docker, portfolio]
+spec:
+  owner: user:guest
+  type: website
+
+  parameters:
+    - title: Informations du portfolio
+      required: [name, fullName, jobTitle, dockerhubUser, dockerhubToken]
+      properties:
+        name:
+          title: Nom du composant
+          type: string
+          default: portfolio-nextjs
+          pattern: '^[a-z0-9-]+$'
+        fullName:
+          title: Nom complet
+          type: string
+        jobTitle:
+          title: Titre / métier
+          type: string
+          default: DevOps & Cloud Engineer
+        email:
+          title: Email
+          type: string
+        dockerhubUser:
+          title: Utilisateur Docker Hub
+          type: string
+        dockerhubToken:
+          title: Token Docker Hub
+          type: string
+          ui:field: Secret
+    - title: Dépôt GitHub
+      required: [repoUrl]
+      properties:
+        repoUrl:
+          title: Emplacement du dépôt
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts: [github.com]
+
+  steps:
+    - id: fetch
+      name: Générer le projet
+      action: fetch:template
+      input:
+        url: ./skeleton
+        values:
+          name: ${{ parameters.name }}
+          fullName: ${{ parameters.fullName }}
+          jobTitle: ${{ parameters.jobTitle }}
+          email: ${{ parameters.email }}
+          dockerhubUser: ${{ parameters.dockerhubUser }}
+          destination: ${{ parameters.repoUrl | parseRepoUrl }}
+
+    - id: fetch-workflow
+      name: Ajouter le pipeline CI/CD
+      action: fetch:plain
+      input:
+        url: ./workflow
+        targetPath: .
+
+    - id: fetch-workflow
+      name: Ajouter le pipeline CI/CD
+      action: fetch:plain
+      input:
+        url: ./workflow
+        targetPath: .
+
+    - id: publish
+      name: Créer le dépôt GitHub et pousser le code
+      action: publish:github
+      input:
+        repoUrl: ${{ parameters.repoUrl }}
+        description: Portfolio Next.js ${{ parameters.fullName }}
+        defaultBranch: main
+        repoVisibility: public
+        secrets:
+          DOCKERHUB_USERNAME: ${{ parameters.dockerhubUser }}
+          DOCKERHUB_TOKEN: ${{ secrets.dockerhubToken }}
+
+    - id: register
+      name: Enregistrer dans le Catalog
+      action: catalog:register
+      input:
+        catalogInfoUrl: https://github.com/${{ (parameters.repoUrl | parseRepoUrl).owner }}/${{ (parameters.repoUrl | parseRepoUrl).repo }}/blob/main/catalog-info.yaml
+
+  output:
+    links:
+      - title: Dépôt GitHub
+        url: ${{ steps['publish'].output.remoteUrl }}
+      - title: Ouvrir dans le Catalog
+        icon: catalog
+        entityRef: ${{ steps['register'].output.entityRef }}
