@@ -1,0 +1,32 @@
+apiVersion: scaffolder.backstage.io/v1beta3
+kind: Template
+metadata:
+  name: portfolio-redeploy-template
+  title: Relancer le pipeline du Portfolio
+  description: Déclenche build, push Docker Hub et déploiement local.
+  tags: [cicd]
+spec:
+  owner: user:guest
+  type: service
+  parameters:
+    - title: Dépôt
+      required: [repoUrl]
+      properties:
+        repoUrl:
+          title: Dépôt du portfolio
+          type: string
+          ui:field: RepoUrlPicker
+          ui:options:
+            allowedHosts: [github.com]
+  steps:
+    - id: dispatch
+      name: Déclencher le workflow
+      action: github:actions:dispatch
+      input:
+        repoUrl: ${{ parameters.repoUrl }}
+        workflowId: ci-cd.yml
+        branchOrTagName: main
+  output:
+    links:
+      - title: Voir les runs
+        url: https://${{ (parameters.repoUrl | parseRepoUrl).host }}/${{ (parameters.repoUrl | parseRepoUrl).owner }}/${{ (parameters.repoUrl | parseRepoUrl).repo }}/actions
