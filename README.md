@@ -27,7 +27,7 @@
 | 6. Déploiement local, URL affichée | Réalisé | Captures 02, 15 |
 | 7. Évolution (Certifications, Projets, Dark Mode) depuis Backstage | Réalisé | Captures 09 à 14 |
 | 7. Relance automatique de toute la chaîne après modification | Réalisé (merge de la Pull Request) | Capture 11 |
-| 7. Relance sans modification (template dédié) | Template fourni, **non démontré** | Section 7.3 |
+| 7. Relance sans modification (template dédié) | Réalisé | Captures 16, 17 |
 
 Écarts à signaler honnêtement :
 
@@ -330,6 +330,16 @@ Mode sombre, nom, titre et email mis à jour.
 Sections **Certifications** et **Projets DevOps & Cloud**.
 
 ![Certifications et projets](docs/img/14-portfolio-certifications-projets.png)
+
+### Relance sans modification de code
+
+Le template *Relancer le pipeline du Portfolio* déclenche le workflow par `workflow_dispatch` (action `github:actions:dispatch`). L'étape passe au vert et le lien *Voir les runs* est affiché.
+
+![Template de relance](docs/img/16-relance-template-vert.png)
+
+Le run #4 est déclenché manuellement depuis Backstage : `build-and-push` puis `deploy-local` sont verts, sans aucune commande Git, Docker ou Docker Compose saisie par le développeur.
+
+![Run déclenché par la relance](docs/img/17-relance-run-vert.png)
 
 ### Résumé de la procédure
 
