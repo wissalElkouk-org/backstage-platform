@@ -6,16 +6,36 @@
 |---|---|
 | **Formateur** | Wahid Hamdi |
 | **Étudiante** | Wissal Elkouk |
-| **Dépôt de la plateforme** | `wissalElkouk-org/backstage-platform` |
-| **Dépôt généré** | `wissalElkouk-org/portfolio-nextjs` |
-| **Image Docker Hub** | `wissalelkouk/portfolio-nextjs` |
+| **Dépôt de la plateforme (rendu)** | https://github.com/wissalElkouk-org/backstage-platform |
+| **Dépôt généré par Backstage** | https://github.com/wissalElkouk-org/portfolio-nextjs |
+| **Image Docker Hub** | https://hub.docker.com/r/wissalelkouk/portfolio-nextjs |
 | **Date** | Novembre 2026 |
 
 ---
 
-Documentation technique du TP « Industrialisation du cycle de vie d'un Portfolio Next.js ».
+## État d'avancement par rapport au sujet
 
-Backstage sert de portail développeur unique : il crée le projet, le dépôt Git, les artefacts Docker et le pipeline, puis orchestre l'évolution et la relivraison de l'application.
+| Étape du sujet | Résultat | Preuve |
+|---|---|---|
+| 1. Projet Next.js créé par un Software Template | Réalisé | Captures 01, 02 |
+| 1. Composant enregistré dans le Catalog | Réalisé | Capture 03 |
+| 2. Dépôt GitHub créé et initialisé automatiquement | Réalisé | Capture 02 |
+| 3. Dockerfile, `.dockerignore`, `docker-compose.yml` générés et versionnés | Réalisé | Dépôt généré |
+| 4. Build de l'image et version `v<N>` | Réalisé | Captures 05, 11 |
+| 4. Statut du build visible dans Backstage | Réalisé (plugin GitHub Actions) | Capture 03 |
+| 5. Publication sur Docker Hub | Réalisé | Capture 08 |
+| 6. Déploiement local, URL affichée | Réalisé | Captures 02, 15 |
+| 7. Évolution (Certifications, Projets, Dark Mode) depuis Backstage | Réalisé | Captures 09 à 14 |
+| 7. Relance automatique de toute la chaîne après modification | Réalisé (merge de la Pull Request) | Capture 11 |
+| 7. Relance sans modification (template dédié) | Template fourni, **non démontré** | Section 7.3 |
+
+Écarts à signaler honnêtement :
+
+- le **merge de la Pull Request** se fait par un clic sur GitHub, pas dans Backstage ;
+- le premier run du dépôt généré a échoué (identifiants Docker Hub saisis dans le mauvais champ du formulaire) et a été relancé après correction des secrets ; la section 11 détaille la cause et la correction ;
+- la connexion OAuth GitHub de l'onglet CI/CD de Backstage a nécessité une OAuth App ; le statut des builds est aussi accessible par les liens de la sortie du template.
+
+---
 
 ## 1. Objectif et résultat
 
@@ -241,81 +261,90 @@ Déclencheurs : `push` sur `main` et `workflow_dispatch`.
 
 ### Étape 1 : création depuis Backstage
 
-Backstage → Create : les trois templates sont chargés dans le portail.
+Le portail liste les trois templates.
 
 ![Templates Backstage](docs/img/01-templates-backstage.png)
 
-Le template pose les secrets Docker Hub dans le dépôt généré.
+Le template s'exécute sans intervention manuelle : génération du projet, ajout du pipeline, création du dépôt GitHub, enregistrement dans le Catalog. Les liens *Dépôt GitHub*, *Ouvrir dans le Catalog*, *Application locale* et *Statut du build* sont affichés.
 
-![Secrets GitHub Actions](docs/img/02-secrets-dockerhub.png)
+![Création : 5 étapes vertes](docs/img/02-creation-5-etapes-vertes.png)
 
-### Étapes 4 et 5 : build de l'image et publication sur Docker Hub
+### Catalog et statut du build dans Backstage
 
-Le job `build-and-push` passe au vert : build Next.js, connexion Docker Hub, build et push de l'image.
+Le composant `portfolio-nextjs` est dans le Catalog. L'onglet GitHub Actions affiche les runs du dépôt.
 
-![Pipeline build vert](docs/img/03-pipeline-build-vert.png)
+![Catalog et runs](docs/img/03-catalog-composant-et-runs.png)
 
-L'image est disponible sur Docker Hub.
+Les secrets Docker Hub sont posés dans le dépôt généré par l'action `publish:github`.
 
-![Docker Hub](docs/img/04-dockerhub-tags.png)
+![Secrets GitHub Actions](docs/img/04-secrets-github-actions.png)
+
+### Étapes 4 et 5 : build, version et publication sur Docker Hub
+
+Run du dépôt généré : `build-and-push` puis `deploy-local` sont verts.
+
+![Run v1 complet](docs/img/05-run-v1-complet-vert.png)
+
+L'image est publiée sur Docker Hub.
+
+![Docker Hub](docs/img/08-dockerhub-tags.png)
 
 ### Étape 6 : déploiement local automatisé
 
-Le runner self-hosted `k3s-server` est **Idle** avec le label `local`.
+Le runner self-hosted est *Idle* avec le label `local`.
 
-![Runner Idle](docs/img/05-runner-idle-local.png)
+![Runner](docs/img/07-runner-idle-label-local.png)
 
-Le conteneur `portfolio` tourne en `healthy` et le contrôle de santé répond `{"status":"ok"}`.
+Le conteneur est sain et le contrôle de santé répond `{"status":"ok"}`.
 
-![Déploiement et health check](docs/img/06-deploiement-v2-health.png)
+![Déploiement et health check](docs/img/15-deploiement-health-check.png)
 
-Le run complet est en succès : `build-and-push` puis `deploy-local`.
+Portfolio de base, avant l'évolution.
 
-![Run complet](docs/img/07-run-complet-vert.png)
+![Portfolio initial](docs/img/06-portfolio-version-initiale.png)
 
 ### Étape 7 : évolution du portfolio depuis Backstage
 
 Formulaire du template *Faire évoluer le Portfolio (v2)*.
 
-![Formulaire d'évolution](docs/img/08-template-evolution-formulaire.png)
+![Formulaire d'évolution](docs/img/09-template-evolution-formulaire.png)
 
-Les étapes *Préparer les modifications* et *Ouvrir la Pull Request* passent au vert.
+Les deux étapes passent au vert et une Pull Request est ouverte.
 
-![Template d'évolution](docs/img/09-template-evolution-vert.png)
+![Pull Request générée](docs/img/10-template-evolution-pull-request.png)
 
-Le merge de la Pull Request déclenche automatiquement le pipeline : nouvelle image, déploiement, contrôle de santé.
+Le merge de la Pull Request déclenche automatiquement le pipeline : build, nouvelle image, déploiement et contrôle de santé.
 
-![Run d'évolution](docs/img/10-run-evolution-v3.png)
+![Run d'évolution](docs/img/11-run-evolution-complet-vert.png)
 
-Le conteneur est remplacé par la version `v3` et la page contient la section Certifications.
+Le conteneur est remplacé par la nouvelle version.
 
-![Docker ps v3](docs/img/11-docker-ps-v3-certifications.png)
+![Docker ps après évolution](docs/img/12-docker-ps-v3-certifications.png)
 
 ### Résultat final
 
-Mode sombre actif, informations personnelles mises à jour.
+Mode sombre, nom, titre et email mis à jour.
 
-![Portfolio mode sombre](docs/img/12-portfolio-mode-sombre.png)
+![Mode sombre](docs/img/13-portfolio-mode-sombre.png)
 
 Sections **Certifications** et **Projets DevOps & Cloud**.
 
-![Certifications et projets](docs/img/13-portfolio-certifications-projets.png)
+![Certifications et projets](docs/img/14-portfolio-certifications-projets.png)
 
 ### Résumé de la procédure
 
 1. **Création** : Create → *Portfolio Next.js (CI/CD complet)*, Owner = organisation, Repository = `portfolio-nextjs`.
-2. **Catalog** : le composant `portfolio-nextjs` est enregistré avec ses liens.
-3. **Premier pipeline** : GitHub → Actions → run `v1`.
-4. **Vérification** :
+2. **Premier pipeline** : GitHub → Actions, run `v1`.
+3. **Vérification** :
    ```bash
    docker ps --format "table {{.Names}}\t{{.Image}}\t{{.Status}}" | grep portfolio
    curl http://localhost:3000/api/health      # {"status":"ok"}
    ```
-5. **Évolution** : Create → *Faire évoluer le Portfolio (v2)*, puis merge de la Pull Request.
-6. **Relivraison** : nouveau run, nouvelle image sur Docker Hub, conteneur remplacé, contrôle de santé.
-7. **Relance** : Create → *Relancer le pipeline du Portfolio*.
+4. **Évolution** : Create → *Faire évoluer le Portfolio (v2)*, puis merge de la Pull Request.
+5. **Relivraison automatique** : nouveau run, nouvelle image, conteneur remplacé, contrôle de santé.
+6. **Relance sans modification** : Create → *Relancer le pipeline du Portfolio*.
 
-Aucune commande Git, Docker ou Docker Compose n'est saisie par le développeur pour livrer : tout est exécuté par Backstage et par le pipeline. Les commandes `docker ps` et `curl` servent uniquement à constater le résultat.
+Les commandes `docker ps` et `curl` servent uniquement à constater le résultat.
 
 ## 10. Livrables
 
@@ -364,6 +393,17 @@ Aucune commande Git, Docker ou Docker Compose n'est saisie par le développeur p
 - Plugin GitHub Actions dans l'interface (onglet CI/CD) via le nouveau système de frontend.
 - Déploiement sur Kubernetes (k3s) à la place de Docker Compose.
 - Analyse de sécurité de l'image (Trivy) dans le pipeline.
+### Points de vigilance supplémentaires
+
+| Problème | Cause | Solution |
+|---|---|---|
+| `unauthorized: incorrect username or password` puis `malformed HTTP Authorization header` à la connexion Docker Hub | Identifiant et token saisis dans les mauvais champs du formulaire (utilisateur de 36 caractères, token de 5) | Réécrire `DOCKERHUB_USERNAME` et `DOCKERHUB_TOKEN`, contraindre le champ utilisateur du template, nettoyer les valeurs dans le workflow |
+| Pull Request bloquée (« Review required ») | `publish:github` protège la branche `main` par défaut | Supprimer la règle ou ajouter `protectDefaultBranch: false` à l'étape `publish` |
+| `redirect_uri is not associated with this application` | URL de rappel de l'OAuth App incorrecte | `http://localhost:7007/api/auth/github/handler/frame` |
+| Composant absent du Catalog après redémarrage | Catalogue SQLite en mémoire | Déclarer le `catalog-info.yaml` dans `catalog.locations` |
+| `IPC request 'DevDataStore.load' timed out` | VM trop lente (RAM insuffisante) | Libérer la mémoire, relancer une seule instance |
+| Application inaccessible depuis le PC (`TIMED_OUT`) | Port 3000 filtré par le réseau | Tunnel SSH : `ssh -L 8000:localhost:3000 <utilisateur>@<ip-vm>` |
+
 
 ---
 
